@@ -1,0 +1,1 @@
+CREATE TABLE removed_works (photo TEXT PRIMARY KEY NOT NULL);
