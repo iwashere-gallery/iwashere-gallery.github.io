@@ -18,11 +18,19 @@ function dimensions(bytes){
  throw Error('No JPEG dimensions');
 }
 for(const work of catalog){
+ const sizes={};
  for(const [kind,metadata] of [['preview','preview'],['detail','detail'],['signed','original']]){
   assert.match(work[kind],/^media\/[\w-]+\.jpg$/);
   expected.add(work[kind]);
   const bytes=await readFile('docs/'+work[kind]);
-  assert.deepEqual(dimensions(bytes),[work[metadata+'Width'],work[metadata+'Height']],work[kind]);
+  sizes[kind]=dimensions(bytes);
+  const declared=[work[metadata+'Width'],work[metadata+'Height']];
+  if(declared.some(value=>value!=null))assert.deepEqual(sizes[kind],declared,work[kind]);
+ }
+ for(const kind of ['detail','preview']){
+  const [width,height]=sizes[kind], [originalWidth,originalHeight]=sizes.signed;
+  assert.ok(width>0&&height>0&&width<=originalWidth&&height<=originalHeight,work[kind]);
+  assert.ok(Math.abs(width*originalHeight-height*originalWidth)<=Math.max(originalWidth,originalHeight),work[kind]);
  }
 }
 assert.equal(expected.size,catalog.length*3);
