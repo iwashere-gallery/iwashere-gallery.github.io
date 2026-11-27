@@ -1,0 +1,58 @@
+name: Import and test gallery candidate
+on:
+  push:
+    branches: [gallery-integration]
+    paths: [.github/workflows/import-gallery.yml]
+permissions:
+  contents: write
+jobs:
+  import:
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: gallery-integration
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '24'
+      - name: Retrieve the approved release files
+        env:
+          GH_TOKEN: ${{ github.token }}
+        shell: bash
+        run: |
+          set -eu -o pipefail
+          dir="$RUNNER_TEMP/gallery-import"
+          mkdir -p "$dir"
+          gh api 'repos/{owner}/{repo}/releases?per_page=50' --jq '.[] | select(.draft and .name == "GitHub Pages gallery · internal build") | .id' > "$dir/id"
+          test "$(wc -l < "$dir/id")" -eq 1
+          rid=$(cat "$dir/id")
+          gh api "repos/{owner}/{repo}/releases/$rid/assets?per_page=100" --jq '.[] | select(.state=="uploaded") | [.id,.name] | @tsv' > "$dir/files"
+          while read -r id name; do
+            case "$name" in gallery-source.zip|SHA256SUMS|photos-[0-9][0-9].tar) gh api -H 'Accept: application/octet-stream' "repos/{owner}/{repo}/releases/assets/$id" > "$dir/$name";; esac
+          done < "$dir/files"
+          cd "$dir"
+          echo '8b8f2ad8613fed5beaef133800c7ec8031b64808c17e95052f62725a54958a55  SHA256SUMS' | sha256sum --check
+          tr -d '\r' < SHA256SUMS | sha256sum --check
+          unzip -q gallery-source.zip -d "$GITHUB_WORKSPACE"
+          for part in photos-*.tar; do tar xf "$part" -C "$GITHUB_WORKSPACE"; done
+      - name: Validate images and isolated visitor service
+        run: node qa/check.mjs
+      - name: Save candidate to the integration branch
+        shell: bash
+        run: |
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git add docs qa drizzle backend
+          if ! git diff --cached --quiet; then git commit -m 'Import 134 photographs and the tested GitHub Pages gallery'; git push origin HEAD:gallery-integration; fi
+      - name: Desktop and mobile browser tests
+        run: |
+          npm install --prefix "$RUNNER_TEMP/gallery-qa" playwright@1.56.1
+          "$RUNNER_TEMP/gallery-qa/node_modules/.bin/playwright" install --with-deps chromium
+          node qa/preview.mjs &
+          server=$!
+          trap 'kill "$server"' EXIT
+          curl --retry 12 --retry-delay 1 --retry-connrefused --fail http://127.0.0.1:5186/ --output /dev/null
+          NODE_PATH="$RUNNER_TEMP/gallery-qa/node_modules" node qa/browser.cjs
+      - name: Verify production visitor service
+        run: node qa/live.mjs
