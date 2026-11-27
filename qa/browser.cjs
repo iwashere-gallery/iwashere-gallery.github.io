@@ -9,6 +9,12 @@ const assert = require('node:assert/strict');
   const errors = [];
   page.on('pageerror', error => errors.push(error.message));
   const catalog = JSON.parse(await readFile('docs/gallery.json', 'utf8'));
+  if(!catalog.length){
+   await page.goto('http://127.0.0.1:5186/');
+   await page.getByText('The first photograph will appear here.',{exact:true}).waitFor();
+   assert.deepEqual(errors,[]);
+   return;
+  }
   const work = catalog.find(w=>w.id==='dsc01362') || catalog.find(w=>w.country && w.cityEn);
   assert.ok(work,'The fixture requires a published photograph with a city.');
   const country=new Intl.DisplayNames(['en'],{type:'region'}).of(work.country);

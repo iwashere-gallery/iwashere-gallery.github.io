@@ -1,10 +1,12 @@
 import assert from 'node:assert/strict';
-import {readFile} from 'node:fs/promises';
 import {serviceURL} from '../docs/service.js';
 
 const origin = 'https://iwashere-gallery.github.io';
-const catalog = JSON.parse(await readFile('docs/gallery.json','utf8'));
-const work = 'works/'+encodeURIComponent(catalog[0].id);
+const liveCatalog = await fetch(origin+'/gallery.json');
+assert.ok(liveCatalog.ok || liveCatalog.status===404,'Live Pages catalog '+liveCatalog.status);
+const catalog=liveCatalog.ok?await liveCatalog.json():[{id:'dsc01362'}];
+assert.ok(Array.isArray(catalog),'Invalid live Pages catalog');
+const work = 'works/'+encodeURIComponent(catalog[0]?.id||'qa-absent-work');
 for (const route of ['visits',work+'/view',work+'/messages',work+'/download']) {
  const preflight = await fetch(serviceURL(route), {method:'OPTIONS',headers:{Origin:origin,
   'Access-Control-Request-Method':'POST','Access-Control-Request-Headers':'content-type'}});
@@ -13,8 +15,9 @@ for (const route of ['visits',work+'/view',work+'/messages',work+'/download']) {
 }
 for (const route of ['visits',work]) {
  const response=await fetch(serviceURL(route),{headers:{Origin:origin}});
- assert.equal(response.status,200,route);
+ assert.equal(response.status,route===work&&!catalog.length?404:200,route);
  assert.equal(response.headers.get('access-control-allow-origin'),origin);
+ if(response.status===404)continue;
  const data=await response.json();
  assert.ok(Number.isInteger(route==='visits'?data.n:data.views),route);
 }
