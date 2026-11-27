@@ -14,7 +14,7 @@ const assert = require('node:assert/strict');
   const country=new Intl.DisplayNames(['en'],{type:'region'}).of(work.country);
   await page.goto('http://127.0.0.1:5186/');
   await page.getByRole('link', {name:country,exact:true}).waitFor();
-  assert.equal(await page.locator('#rail a').count(), new Set(catalog.map(w=>w.country)).size);
+  assert.equal(await page.locator('#rail').getByRole('link').count(), new Set(catalog.map(w=>w.country)).size);
   await page.locator('#atlasZoom').click();
   await page.locator('#theme').click();
   await page.locator('#sound').click();
