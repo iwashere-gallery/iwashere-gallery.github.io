@@ -5,6 +5,24 @@ const media=new Map(/* hosted media */ []);
 const previewKey=/* preview key */ '';
 let previewCipher;
 const collectionKey='ready/'+(/* media revision */ 'local');
+let pagesCatalog, pagesCatalogUntil=0, pagesCatalogRequest;
+async function currentPagesWorks(){
+ if(Date.now()<pagesCatalogUntil)return pagesCatalog;
+ if(!pagesCatalogRequest)pagesCatalogRequest=(async()=>{
+  const response=await fetch(pagesOrigin+'/gallery.json',{redirect:'error',signal:AbortSignal.timeout(6000)});
+  // The original collection remains available during the first Pages deployment.
+  if(response.status===404)return works;
+  if(!response.ok)throw Error('Could not read published gallery');
+  const list=await response.json();
+  if(!Array.isArray(list)||list.some(w=>typeof w?.id!=='string'))throw Error('Invalid published gallery');
+  return new Set(list.map(w=>w.id));
+ })();
+ try{
+  pagesCatalog=await pagesCatalogRequest;
+  pagesCatalogUntil=Date.now()+30000;
+  return pagesCatalog;
+ }finally{pagesCatalogRequest=null}
+}
 async function photoFile(name,request,env){
  const item=media.get(name);
  if(!item)return new Response(null,{status:404});
@@ -159,7 +177,9 @@ async function handle(request,env){
   return json(await q("SELECT count(*) AS n FROM view_events WHERE photo=''").first());
  }
  const [,photo,action]=path.match(/^\/api\/works\/([^/]+)(?:\/(view|messages|download))?$/)||[];
- if(!works.has(photo)||await deleted(photo))return json({},404);
+ if(!photo)return json({},404);
+ const published=pagesRoute(request)?await currentPagesWorks():works;
+ if(!published.has(photo)||await deleted(photo))return json({},404);
  if(method==='POST'&&action==='download'){
   await q('INSERT OR IGNORE INTO download_events(event_key,photo,created) VALUES (?,?,?)',photo+':'+data.key,photo,Date.now()).run();
   return json({recorded:true});
