@@ -1,0 +1,30 @@
+<!doctype html>
+<html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover"><meta name="theme-color" content="#f5f5f1"><title>I Was Here · Liwangxu Shen</title><link rel="stylesheet" href="style.css"></head>
+<body><canvas id="drape" aria-hidden="true"></canvas><header><a class="identity" href="./"><span class="iris" aria-hidden="true">◉</span> Liwangxu Shen</a><nav><a href="#collection" data-t="destinations">Destinations</a><button id="theme" class="theme-control" type="button"><span class="theme-glyph" aria-hidden="true">☼</span><span class="theme-name">Appearance</span></button><button id="sound" class="sound-control" type="button" aria-pressed="true"><span class="sound-bars" aria-hidden="true"><i></i><i></i><i></i><i></i></span><span class="sound-name">Sound on</span></button><button id="lang" aria-label="Switch language">中文</button></nav></header>
+<main><section class="hero"><div class="hero-copy"><h1 data-t="heading">I Was Here</h1><img class="sig" src="signature.png" alt="@LiwangxuShen"></div></section>
+<section id="collection">
+<div class="sectionhead"><div><nav id="crumbs" aria-label="Breadcrumb" hidden></nav><h2 id="sectionTitle" tabindex="-1">Destinations</h2></div><span id="count"></span></div>
+<div id="rail" class="travel-rail" hidden></div><div class="grid" id="grid" hidden></div><p class="empty" id="empty" data-t="empty">The first photograph will appear here.</p></section>
+<section id="atlas" aria-labelledby="atlasTitle" hidden>
+  <div class="atlas-index"><h2 id="atlasTitle"></h2><p id="atlasHelp"></p><nav id="atlasCities" aria-labelledby="atlasTitle"></nav></div>
+  <div class="atlas-map"><canvas id="atlasCanvas" aria-hidden="true"></canvas><span id="atlasTip" hidden></span><div class="atlas-tools"><button id="atlasZoom" type="button"></button><button id="atlasSpin" type="button"></button></div></div>
+</section>
+<div class="gallery-intro">
+  <p data-t="introOpening"></p>
+  <p data-t="introWelcome"></p>
+  <img class="intro-signature" src="signature.png" alt="@LiwangxuShen">
+</div></main>
+<footer><button type="button" id="pause" class="motion-control" aria-label="Pause background animation">Ⅱ</button><button id="palette" type="button" hidden></button><span id="siteVisits"></span><span>© Liwangxu Shen</span><a id="studioLink" hidden href="/api/studio/page" data-t="studio">Studio</a></footer>
+<dialog id="viewer" aria-labelledby="workTitle" autofocus>
+<img id="viewerBackdrop" alt="" aria-hidden="true">
+<div class="toolbar"><div class="viewer-actions"><button id="back" data-t="close">Close</button><button id="viewerSound" class="sound-control" type="button" aria-pressed="true"><span class="sound-bars" aria-hidden="true"><i></i><i></i><i></i><i></i></span><span class="sound-name">Sound on</span></button></div><span id="position"></span><div class="viewer-nav"><button id="prev" aria-label="Previous">‹</button><button id="next" aria-label="Next">›</button></div></div>
+<div class="stage"><button id="viewPhoto" type="button" aria-pressed="false"><img id="large" alt=""></button></div>
+<div id="capture" aria-live="polite"><p id="camera"></p><p id="lens"></p><p id="settings"></p><p id="context"></p></div>
+<div id="caption"><div><h2 id="workTitle" tabindex="-1"></h2><p id="description"></p></div><div class="download-options"><a class="download" id="download" data-t="download">Download signed photo</a><a id="openSigned" target="_blank" rel="noopener" data-t="openSigned">Open signed JPEG</a></div></div>
+<section id="guestbook" hidden aria-labelledby="guestTitle">
+<div class="guest-head"><h2 id="guestTitle" tabindex="-1">Guestbook</h2><span id="guestStats"></span></div>
+<form id="guestForm"><label><span id="nickLabel">Nickname (optional)</span><input id="guestNick" maxlength="40" autocomplete="off"></label>
+<label><span id="messageLabel">Message</span><textarea id="guestBody" maxlength="800" rows="2" required></textarea></label><button id="sendMessage" type="submit">Post message</button></form>
+<p id="guestStatus" role="status"></p><ol id="messageList" class="messages"></ol><button type="button" id="olderMessages" hidden>Older messages</button></section>
+</dialog>
+<script type="module" src="gallery.js"></script></body></html>
